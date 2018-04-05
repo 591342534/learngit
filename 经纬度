@@ -1,0 +1,216 @@
+#include <stdio.h>
+#include <string.h>
+
+typedef struct SLocation
+{
+	double dLongitude;//经度
+	double dLatitude;//维度
+	SLocation()
+	{
+		dLongitude = 0.0;
+		dLatitude = 0.0;
+	}
+}T_LOCATION, *P_T_LOCATION;
+
+typedef struct SRectangle
+{
+	T_LOCATION tPoint[2];//0左上点，1右下点 坐标
+	SRectangle()
+	{
+		memset(tPoint, 0, sizeof(T_LOCATION)*2);
+	}
+}T_RECTANGLE, *P_T_RECTANGLE;
+
+
+#define BLUE_COUNT 6
+#define RED_COUNT 6
+
+//范围矩形列表(蓝色)
+T_RECTANGLE g_atagRegionRectangle [BLUE_COUNT] = {};
+//范围内排除矩形列表(红色)
+T_RECTANGLE g_atagExcludeRectangle [RED_COUNT] = {};
+
+int iCurrentRegionRectangleLen = 0;
+int iCurrentExcludeRectangleLen = 0;
+
+void initRegionRectangle()
+{
+	for (int i=0; i<BLUE_COUNT; i++)
+	{
+		for (int j=0; j<2; j++)
+		{
+			g_atagRegionRectangle[i].tPoint[j].dLongitude = 0;
+			g_atagRegionRectangle[i].tPoint[j].dLatitude = 0;
+		}
+	}
+	iCurrentRegionRectangleLen = 0;
+}
+void initExcludeRectangle()
+{
+	for (int i=0; i<RED_COUNT; i++)
+	{
+		for (int j=0; j<2; j++)
+		{
+			g_atagExcludeRectangle[i].tPoint[j].dLongitude = 0;
+			g_atagExcludeRectangle[i].tPoint[j].dLatitude = 0;
+		}
+	}
+	iCurrentExcludeRectangleLen = 0;
+}
+
+bool appendRegionRectangle(T_RECTANGLE sRectangle)
+{
+	if (iCurrentExcludeRectangleLen > BLUE_COUNT)
+	{
+		return false;
+	}
+	iCurrentRegionRectangleLen++;
+	g_atagRegionRectangle[iCurrentRegionRectangleLen] = sRectangle;
+
+	return true;
+}
+bool appendExcludeRectangle(T_RECTANGLE sRectangle)
+{
+	if (iCurrentExcludeRectangleLen > BLUE_COUNT)
+	{
+		return false;
+	}
+	iCurrentExcludeRectangleLen++;
+	g_atagExcludeRectangle[iCurrentExcludeRectangleLen] = sRectangle;
+
+	return true;
+}
+
+
+bool isInRegionRectangle(T_LOCATION sLocation)
+{
+	bool bRet = false;
+	for (int i=0; i<iCurrentRegionRectangleLen; i++)
+	{
+		if(sLocation.dLatitude<=g_atagRegionRectangle[i].tPoint[0].dLatitude && 
+		   sLocation.dLatitude>=g_atagRegionRectangle[i].tPoint[1].dLatitude &&
+		   sLocation.dLongitude>=g_atagRegionRectangle[i].tPoint[0].dLongitude && 
+		   sLocation.dLongitude<=g_atagRegionRectangle[i].tPoint[1].dLongitude
+		   )
+		{
+			return true;
+		}
+	}
+	return bRet;
+}
+
+bool isInExcludeRectangle(T_LOCATION sLocation)
+{
+	bool bRet = false;
+	for (int i=0; i<iCurrentExcludeRectangleLen; i++)
+	{
+		if(sLocation.dLatitude<=g_atagExcludeRectangle[i].tPoint[0].dLatitude && 
+			sLocation.dLatitude>=g_atagExcludeRectangle[i].tPoint[1].dLatitude &&
+			sLocation.dLongitude>=g_atagExcludeRectangle[i].tPoint[0].dLongitude && 
+			sLocation.dLongitude<=g_atagExcludeRectangle[i].tPoint[1].dLongitude
+			)
+		{
+			return true;
+		}
+	}
+	return bRet;
+}
+
+bool isInChina(T_LOCATION sLocation)
+{
+	if(isInRegionRectangle(sLocation) && !isInExcludeRectangle(sLocation))
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+
+void main()
+{
+	T_RECTANGLE sRectangle;
+	sRectangle.tPoint[0].dLatitude = 49.220400;
+	sRectangle.tPoint[0].dLongitude = 079.446200;
+	sRectangle.tPoint[1].dLatitude = 42.889900;
+	sRectangle.tPoint[1].dLongitude = 096.330000;
+	appendRegionRectangle(sRectangle);
+	sRectangle.tPoint[0].dLatitude = 54.141500;
+	sRectangle.tPoint[0].dLongitude = 109.687200;
+	sRectangle.tPoint[1].dLatitude = 39.374200;
+	sRectangle.tPoint[1].dLongitude = 135.000200;
+	appendRegionRectangle(sRectangle);
+	sRectangle.tPoint[0].dLatitude = 42.889900;
+	sRectangle.tPoint[0].dLongitude = 073.124600;
+	sRectangle.tPoint[1].dLatitude = 29.529700;
+	sRectangle.tPoint[1].dLongitude = 124.143255;
+	appendRegionRectangle(sRectangle);
+	sRectangle.tPoint[0].dLatitude = 29.529700;
+	sRectangle.tPoint[0].dLongitude = 082.968400;
+	sRectangle.tPoint[1].dLatitude = 26.718600;
+	sRectangle.tPoint[1].dLongitude = 097.035200;
+	appendRegionRectangle(sRectangle);
+	sRectangle.tPoint[0].dLatitude = 29.529700;
+	sRectangle.tPoint[0].dLongitude = 097.025300;
+	sRectangle.tPoint[1].dLatitude = 20.414096;
+	sRectangle.tPoint[1].dLongitude = 124.367395;
+	appendRegionRectangle(sRectangle);
+
+	sRectangle.tPoint[0].dLatitude = 25.398623;
+	sRectangle.tPoint[0].dLongitude = 119.921265;
+	sRectangle.tPoint[1].dLatitude = 21.785006;
+	sRectangle.tPoint[1].dLongitude = 122.497559;
+	appendExcludeRectangle(sRectangle);
+
+	sRectangle.tPoint[0].dLatitude = 22.284000; 
+	sRectangle.tPoint[0].dLongitude = 101.865200; 
+	sRectangle.tPoint[1].dLatitude = 20.098800; 
+	sRectangle.tPoint[1].dLongitude = 106.665000;
+	appendExcludeRectangle(sRectangle);
+
+	sRectangle.tPoint[0].dLatitude = 21.542200; 
+	sRectangle.tPoint[0].dLongitude = 106.452500; 
+	sRectangle.tPoint[1].dLatitude = 20.487800; 
+	sRectangle.tPoint[1].dLongitude = 108.051000;
+	appendExcludeRectangle(sRectangle);
+
+	sRectangle.tPoint[0].dLatitude = 55.817500; 
+	sRectangle.tPoint[0].dLongitude = 109.032300; 
+	sRectangle.tPoint[1].dLatitude = 50.325700; 
+	sRectangle.tPoint[1].dLongitude = 119.127000;
+	appendExcludeRectangle(sRectangle);
+
+	sRectangle.tPoint[0].dLatitude = 55.817500; 
+	sRectangle.tPoint[0].dLongitude = 127.456800; 
+	sRectangle.tPoint[1].dLatitude = 49.557400; 
+	sRectangle.tPoint[1].dLongitude = 137.022700;
+	appendExcludeRectangle(sRectangle);
+
+
+	sRectangle.tPoint[0].dLatitude = 44.892200; 
+	sRectangle.tPoint[0].dLongitude = 131.266200; 
+	sRectangle.tPoint[1].dLatitude = 42.569200; 
+	sRectangle.tPoint[1].dLongitude = 137.022700;
+	appendExcludeRectangle(sRectangle);
+
+
+
+
+
+	T_LOCATION sLocation;
+	memset(&sLocation, 0, sizeof(T_LOCATION));
+	//sLocation.dLatitude = 44.042156;
+	//sLocation.dLongitude = 132.759178;
+	sLocation.dLatitude = 46.074988;
+	sLocation.dLongitude = 103.324941;
+	if(isInChina(sLocation))
+	{
+		printf("In China.\n");
+	}
+	else
+	{
+		printf("Not In China.\n");
+	}
+}
